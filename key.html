@@ -44,7 +44,7 @@
   <script>
     // Protection check
     if (localStorage.getItem("authorized") !== "true") {
-      alert("Unauthorized access. Redirecting...");
+      alert("NICE TRY BUD");
       window.location.href = "index.html";
     }
 
@@ -54,6 +54,12 @@
     function generateKey() {
       const part = () => Math.random().toString(36).substring(2, 8).toUpperCase();
       return `Cryzix-${part()}${part()}`;
+    }
+
+    function hashKey(key) {
+      const salt = "CRYZIXONTOP";  // Add your salt
+      let hashed = btoa(key + salt); // Simple base64 hashing method
+      return hashed;
     }
 
     function startCountdown() {
@@ -81,8 +87,10 @@
       let expire = localStorage.getItem("keyExpire");
       if (!savedKey || !expire) {
         const key = generateKey();
+        const hashedKey = hashKey(key);  // Hash the key with salt before storing
         const expireTime = Date.now() + 48 * 60 * 60 * 1000;
-        localStorage.setItem("cryzixKey", key);
+        localStorage.setItem("cryzixKey", key);  // Save the original key
+        localStorage.setItem("hashedKey", hashedKey);  // Save the hashed key
         localStorage.setItem("keyExpire", expireTime.toString());
         savedKey = key;
       }
