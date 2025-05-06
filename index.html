@@ -87,6 +87,7 @@
       if (step2 === "done") btn2.classList.add("completed");
 
       if (step1 === "done" && step2 === "done") {
+        localStorage.setItem("authorized", "true"); // Set auth before redirecting
         window.location.href = "key.html";
       }
     }
