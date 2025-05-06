@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cryzix Key Display</title>
+  <style>
+    body {
+      background: #0f0f0f;
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #00bcd4;
+    }
+    #keyBox {
+      margin-top: 30px;
+      background: #1f1f1f;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    #countdown {
+      margin-top: 10px;
+      font-size: 16px;
+      color: #00ffcc;
+    }
+  </style>
+</head>
+<body>
+  <h1>Your Cryzix Key</h1>
+  <div id="keyBox">
+    <p>Your Key:</p>
+    <strong id="keyDisplay"></strong>
+    <div id="countdown"></div>
+  </div>
+  <script>
+    const keyDisplay = document.getElementById("keyDisplay");
+    const countdownDisplay = document.getElementById("countdown");
+
+    function generateKey() {
+      const part = () => Math.random().toString(36).substring(2, 8).toUpperCase();
+      return `Cryzix-${part()}${part()}`;
+    }
+
+    function startCountdown() {
+      const expireTime = parseInt(localStorage.getItem("keyExpire"));
+      function updateCountdown() {
+        const now = Date.now();
+        const diff = expireTime - now;
+        if (diff <= 0) {
+          localStorage.clear();
+          alert("Your key has expired.");
+          window.location.href = "index.html";
+          return;
+        }
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        countdownDisplay.textContent = `Key Expires In: ${hours}h ${minutes}m ${seconds}s`;
+      }
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+    }
+
+    function initializeKey() {
+      let savedKey = localStorage.getItem("cryzixKey");
+      let expire = localStorage.getItem("keyExpire");
+      if (!savedKey || !expire) {
+        const key = generateKey();
+        const expireTime = Date.now() + 48 * 60 * 60 * 1000;
+        localStorage.setItem("cryzixKey", key);
+        localStorage.setItem("keyExpire", expireTime.toString());
+        savedKey = key;
+      }
+      keyDisplay.textContent = savedKey;
+      startCountdown();
+    }
+
+    initializeKey();
+  </script>
+</body>
+  </html>
