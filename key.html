@@ -21,8 +21,26 @@
     h1 {
       color: #00bcd4;
     }
+    #supportBox {
+      margin-bottom: 20px;
+    }
+    #supportBox p {
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+    #supportButton {
+      background-color: #ff4081;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    #supportButton:hover {
+      background-color: #f50057;
+    }
     #keyBox {
-      margin-top: 30px;
       background: #1f1f1f;
       padding: 20px;
       border-radius: 10px;
@@ -32,71 +50,106 @@
       font-size: 16px;
       color: #00ffcc;
     }
+    #hashDisplay {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #888;
+    }
+    #copyBtn {
+      margin-top: 10px;
+      background-color: #00bcd4;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    #copyBtn:hover {
+      background-color: #0097a7;
+    }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body>
+
+  <div id="supportBox">
+    <p>SUPPORT US MORE BY COMPLETING THIS</p>
+    <a id="supportButton" href="https://lootdest.org/s?hbY8G6UQ&data=vKZ7P4VswueU5RD8FrkwWgPB97DE/9cpTDAwEQB5nOo%3D" target="_blank">CLICK HERE TO SUPPORT</a>
+  </div>
+
   <h1>Your Cryzix Key</h1>
   <div id="keyBox">
     <p>Your Key:</p>
     <strong id="keyDisplay"></strong>
+    <br/>
+    <button id="copyBtn">Copy to Clipboard</button>
     <div id="countdown"></div>
+    <div id="hashDisplay"></div>
   </div>
+
   <script>
-    // Protection check
     if (localStorage.getItem("authorized") !== "true") {
       alert("NICE TRY BUD");
       window.location.href = "index.html";
     }
 
-    const keyDisplay = document.getElementById("keyDisplay");
-    const countdownDisplay = document.getElementById("countdown");
+    const keyDisplay    = document.getElementById("keyDisplay");
+    const countdownEl   = document.getElementById("countdown");
+    const hashDisplay   = document.getElementById("hashDisplay");
+    const copyBtn       = document.getElementById("copyBtn");
+    const SALT          = "CRYZIXONTOP";
+    const FIXED_KEY     = "Cryzix-ABC123";
 
     function generateKey() {
-      const part = () => Math.random().toString(36).substring(2, 8).toUpperCase();
-      return `Cryzix-${part()}${part()}`;
+      return FIXED_KEY;
     }
 
     function hashKey(key) {
-      const salt = "CRYZIXONTOP";  // Add your salt
-      let hashed = btoa(key + salt); // Simple base64 hashing method
-      return hashed;
+      return CryptoJS.SHA256(key + SALT).toString(CryptoJS.enc.Hex);
     }
 
     function startCountdown() {
-      const expireTime = parseInt(localStorage.getItem("keyExpire"));
-      function updateCountdown() {
-        const now = Date.now();
-        const diff = expireTime - now;
+      const expiry = parseInt(localStorage.getItem("keyExpire"), 10);
+      function update() {
+        const diff = expiry - Date.now();
         if (diff <= 0) {
           localStorage.clear();
           alert("Your key has expired.");
           window.location.href = "index.html";
           return;
         }
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        countdownDisplay.textContent = `Key Expires In: ${hours}h ${minutes}m ${seconds}s`;
+        const h = Math.floor(diff / 3.6e6),
+              m = Math.floor((diff % 3.6e6) / 6e4),
+              s = Math.floor((diff % 6e4) / 1e3);
+        countdownEl.textContent = `Key Expires In: ${h}h ${m}m ${s}s`;
       }
-      updateCountdown();
-      setInterval(updateCountdown, 1000);
+      update();
+      setInterval(update, 1000);
     }
 
     function initializeKey() {
-      let savedKey = localStorage.getItem("cryzixKey");
-      let expire = localStorage.getItem("keyExpire");
-      if (!savedKey || !expire) {
-        const key = generateKey();
-        const hashedKey = hashKey(key);  // Hash the key with salt before storing
-        const expireTime = Date.now() + 48 * 60 * 60 * 1000;
-        localStorage.setItem("cryzixKey", key);  // Save the original key
-        localStorage.setItem("hashedKey", hashedKey);  // Save the hashed key
-        localStorage.setItem("keyExpire", expireTime.toString());
-        savedKey = key;
+      let key    = localStorage.getItem("cryzixKey");
+      let expiry = localStorage.getItem("keyExpire");
+
+      if (!key || !expiry) {
+        key    = generateKey();
+        expiry = Date.now() + 48 * 3600000;
+        localStorage.setItem("cryzixKey", key);
+        localStorage.setItem("hashedKey", hashKey(key));
+        localStorage.setItem("keyExpire", expiry);
       }
-      keyDisplay.textContent = savedKey;
+
+      keyDisplay.textContent = key;
+      hashDisplay.textContent = "SHA256(key+salt): " + hashKey(key);
       startCountdown();
     }
+
+    copyBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(keyDisplay.textContent).then(() => {
+        alert("Key copied to clipboard!");
+      });
+    });
 
     initializeKey();
   </script>
