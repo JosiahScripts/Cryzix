@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Cryzix Key Display</title>
+  <title>Cryzix Key System</title>
   <style>
     body {
       background: #0f0f0f;
@@ -18,22 +19,11 @@
       padding: 20px;
       text-align: center;
     }
-    h1 { color: #00bcd4; }
-    #supportBox { margin-bottom: 20px; }
-    #supportBox p { font-size: 16px; margin-bottom: 10px; }
-    #supportButton {
-      background-color: #ff4081;
-      color: white;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 6px;
-      font-size: 14px;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-block;
+    h1 {
+      color: #00bcd4;
     }
-    #supportButton:hover { background-color: #f50057; }
     #keyBox {
+      margin-top: 20px;
       background: #1f1f1f;
       padding: 20px;
       border-radius: 10px;
@@ -43,28 +33,26 @@
       font-size: 16px;
       color: #00ffcc;
     }
+    #supportBox {
+      margin-bottom: 20px;
+    }
     #copyBtn {
       margin-top: 10px;
-      background-color: #00bcd4;
-      color: white;
+      padding: 8px 14px;
+      background: #00bcd4;
       border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
+      color: white;
       cursor: pointer;
-      font-size: 14px;
+      border-radius: 6px;
     }
-    #copyBtn:hover { background-color: #0097a7; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body>
-
   <div id="supportBox">
-    <p>SUPPORT US MORE BY COMPLETING THIS</p>
-    <a id="supportButton"
-       href="https://lootdest.org/s?hbY8G6UQ&data=vKZ7P4VswueU5RD8FrkwWgPB97DE/9cpTDAwEQB5nOo%3D"
-       target="_blank">
-      CLICK HERE TO SUPPORT
+    <p>SUPPORT US MORE BY COMPLETING THIS:</p>
+    <a href="https://lootdest.org/s?hbY8G6UQ&data=vKZ7P4VswueU5RD8FrkwWgPB97DE/9cpTDAwEQB5nOo%3D" target="_blank">
+      <button>Complete Offer</button>
     </a>
   </div>
 
@@ -72,36 +60,30 @@
   <div id="keyBox">
     <p>Your Key:</p>
     <strong id="keyDisplay"></strong>
-    <br/>
-    <button id="copyBtn">Copy to Clipboard</button>
+    <br>
+    <button id="copyBtn" onclick="copyKey()">Copy Key</button>
     <div id="countdown"></div>
   </div>
 
   <script>
-    if (localStorage.getItem("authorized") !== "true") {
-      alert("NICE TRY BUD");
-      window.location.href = "index.html";
-    }
-
-    const keyDisplay  = document.getElementById("keyDisplay");
+    const keyDisplay = document.getElementById("keyDisplay");
     const countdownEl = document.getElementById("countdown");
-    const copyBtn     = document.getElementById("copyBtn");
-    const SALT        = "CRYZIXONTOP";
+    const SALT = "Cryzixontop";
 
-    // 1) Generate a random key in the form Cryzix-XXXXXXYYYYYY
-    function generateKey() {
-      const part = () => Math.random().toString(36).substring(2, 8).toUpperCase();
-      return `Cryzix-${part()}${part()}`;
+    function generateRawKey(length = 10) {
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      let result = "";
+      for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
     }
 
-    // 2) Hash with SHA256(key + salt)
-    function hashKey(key) {
-      return CryptoJS.SHA256(key + SALT).toString(CryptoJS.enc.Hex);
+    function hashKey(rawKey) {
+      return "Cryzix-" + CryptoJS.SHA256(rawKey + SALT).toString(CryptoJS.enc.Hex);
     }
 
-    // 3) Countdown logic (48h expiry)
-    function startCountdown() {
-      const expiry = parseInt(localStorage.getItem("keyExpire"), 10);
+    function startCountdown(expiry) {
       function update() {
         const diff = expiry - Date.now();
         if (diff <= 0) {
@@ -119,28 +101,34 @@
       setInterval(update, 1000);
     }
 
-    // 4) Initialize (generate or reuse)
     function initializeKey() {
-      let raw    = localStorage.getItem("cryzixKey");
+      let key = localStorage.getItem("cryzixKey");
       let expiry = localStorage.getItem("keyExpire");
-
-      if (!raw || !expiry) {
-        raw    = generateKey();
+      if (!key || !expiry) {
+        const rawKey = generateRawKey();
+        key = hashKey(rawKey);
         expiry = Date.now() + 48 * 3600000;
-        localStorage.setItem("cryzixKey",   raw);
-        localStorage.setItem("hashedKey",    hashKey(raw));
-        localStorage.setItem("keyExpire",    expiry);
+        localStorage.setItem("cryzixKey", key);
+        localStorage.setItem("keyExpire", expiry);
       }
-
-      keyDisplay.textContent = raw;
-      startCountdown();
+      keyDisplay.textContent = key;
+      startCountdown(parseInt(expiry, 10));
     }
 
-    // 5) Copy button
-    copyBtn.addEventListener("click", () => {
-      navigator.clipboard.writeText(keyDisplay.textContent)
-        .then(() => alert("Key copied to clipboard!"));
-    });
+    function copyKey() {
+      const tempInput = document.createElement("input");
+      tempInput.value = keyDisplay.textContent;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand("copy");
+      document.body.removeChild(tempInput);
+      alert("Key copied to clipboard!");
+    }
+
+    if (localStorage.getItem("authorized") !== "true") {
+      alert("NICE TRY BUD");
+      window.location.href = "index.html";
+    }
 
     initializeKey();
   </script>
